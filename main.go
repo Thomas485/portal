@@ -95,11 +95,8 @@ func interactive(c *cli.Context) error {
 		fmt.Println(err)
 		return err
 	}
-	tui := Tui{
-		config: config,
-		width:  0,
-		height: 0,
-	}
+
+	tui := NewTui(config)
 
 	go tui.Start()
 
