@@ -91,20 +91,18 @@ func (t Tui) View() string {
 
 func (t *Tui) UpdateList(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	case tea.KeyMsg:
 		switch msg.String() {
-
-		case "ctrl+c", "q", "esc":
+		case "ctrl+c", "q":
 			return t, tea.Quit
-		case "down":
+		case "down", "j":
 			t.config.mu.RLock()
 			if t.selection < len(t.config.Routes)-1 {
 				t.selection++
 			}
 			t.config.mu.RUnlock()
 			return t, nil
-		case "up":
+		case "up", "k":
 			if t.selection > 0 {
 				t.selection--
 			}
@@ -183,9 +181,28 @@ func (t *Tui) UpdateAdd(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-
-		case "ctrl+c", "esc":
+		case "ctrl+c":
 			return t, tea.Quit
+		case "up":
+			if t.AddScreen.destInput.Focused() {
+				t.AddScreen.destInput.Blur()
+				return t, t.AddScreen.sourceInput.Focus()
+			}
+			return t, nil
+		case "down":
+			if t.AddScreen.sourceInput.Focused() {
+				t.AddScreen.sourceInput.Blur()
+				return t, t.AddScreen.destInput.Focus()
+			}
+			return t, nil
+		case "tab":
+			if t.AddScreen.sourceInput.Focused() {
+				t.AddScreen.sourceInput.Blur()
+				return t, t.AddScreen.destInput.Focus()
+			} else if t.AddScreen.destInput.Focused() {
+				t.AddScreen.destInput.Blur()
+				return t, t.AddScreen.sourceInput.Focus()
+			}
 		case "enter":
 			if t.AddScreen.sourceInput.Focused() {
 				t.AddScreen.sourceInput.Blur()
@@ -205,7 +222,9 @@ func (t *Tui) UpdateAdd(msg tea.Msg) (tea.Model, tea.Cmd) {
 				t.screen = ScreenList
 				return t, nil
 			}
-
+			return t, nil
+		case "esc":
+			t.screen = ScreenList
 			return t, nil
 		}
 	case tea.WindowSizeMsg:
