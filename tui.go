@@ -98,9 +98,11 @@ func (t *Tui) UpdateList(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q", "esc":
 			return t, tea.Quit
 		case "down":
+			t.config.mu.RLock()
 			if t.selection < len(t.config.Routes)-1 {
 				t.selection++
 			}
+			t.config.mu.RUnlock()
 			return t, nil
 		case "up":
 			if t.selection > 0 {
@@ -108,10 +110,12 @@ func (t *Tui) UpdateList(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return t, nil
 		case "d":
+			t.config.mu.Lock()
 			t.config.Routes = slices.Delete(t.config.Routes, t.selection, t.selection+1)
 			if err := t.config.SaveToFile(t.config.File); err != nil {
 				fmt.Println(err)
 			}
+			t.config.mu.Unlock()
 			return t, nil
 		case "a":
 			t.screen = ScreenAdd
@@ -133,19 +137,23 @@ func (t Tui) ViewList() string {
 	r += "Routes:\n\n"
 
 	width := 0
+	t.config.mu.RLock()
 	for _, route := range t.config.Routes {
 		width = max(width, len(route.Source))
 
 	}
+	t.config.mu.RUnlock()
 	width = min(width, t.width/2-8)
 
 	var routeLines []string
+	t.config.mu.RLock()
 	for _, route := range t.config.Routes {
 		rl := lipgloss.PlaceHorizontal(width, lipgloss.Left, route.Source)
 		rl += " -> "
 		rl += lipgloss.PlaceHorizontal(width, lipgloss.Left, route.Dest)
 		routeLines = append(routeLines, rl)
 	}
+	t.config.mu.RUnlock()
 
 	for i, routeLine := range routeLines {
 		var line string
@@ -183,10 +191,12 @@ func (t *Tui) UpdateAdd(msg tea.Msg) (tea.Model, tea.Cmd) {
 				t.AddScreen.sourceInput.Blur()
 				return t, t.AddScreen.destInput.Focus()
 			} else if t.AddScreen.destInput.Focused() {
+				t.config.mu.Lock()
 				t.config.Routes = append(t.config.Routes, Route{
 					Source: t.AddScreen.sourceInput.Value(),
 					Dest:   t.AddScreen.destInput.Value(),
 				})
+				t.config.mu.Unlock()
 				err := t.config.SaveToFile(t.config.File)
 				if err != nil {
 					// TODO: global error

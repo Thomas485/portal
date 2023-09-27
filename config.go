@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Route struct {
@@ -20,13 +21,16 @@ type Config struct {
 	File   string `json:"-"`
 	Port   int
 	Routes []Route
+	mu     sync.RWMutex
 }
 
 func (c *Config) Serve(cert, key string) error {
 	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
 		source := strings.ToLower(r.Host)
 
+		c.mu.RLock()
 		dest, err := findDestination(c.Routes, source)
+		c.mu.RUnlock()
 		if err != nil {
 			http.Error(w, "Host not found", http.StatusNotFound)
 			return
