@@ -48,6 +48,21 @@ func main() {
 				Description: "serve with an interactive tui",
 				Flags:       flags,
 				Action:      interactive,
+			}, {
+				Name:        "generate",
+				Aliases:     []string{"g"},
+				Usage:       "generate a new template config file",
+				UsageText:   "portal generate --file config.json",
+				Description: "generate a new template config file",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:      "file",
+						Value:     "config.json",
+						Usage:     "the file for the new configuration",
+						TakesFile: true,
+					},
+				},
+				Action: generateConfig,
 			},
 		},
 	}
@@ -89,6 +104,23 @@ func interactive(c *cli.Context) error {
 	}
 
 	return config.Serve(cert, key)
+}
+
+func generateConfig(c *cli.Context) error {
+	file := c.String("file")
+	config := Config{
+		Port: 8080,
+		Routes: []Route{
+			{Source: "localhost:8080", Dest: "http://localhost:12345"},
+			{Source: "127.0.0.1:8080", Dest: "http://localhost:56789"},
+		},
+	}
+
+	err := config.SaveToFile(file)
+	if err == nil {
+		fmt.Printf("A new configuration template is written into file \"%s\"\n", file)
+	}
+	return err
 }
 
 func tlsCerts(c *cli.Context) (string, string, error) {
