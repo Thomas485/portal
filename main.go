@@ -111,8 +111,8 @@ func generateConfig(c *cli.Context) error {
 	config := Config{
 		Port: 8080,
 		Routes: []Route{
-			{Source: "localhost:8080", Dest: "http://localhost:12345"},
-			{Source: "127.0.0.1:8080", Dest: "http://localhost:56789"},
+			{Source: "localhost:8080", Dest: "http://localhost:12345", Active: true},
+			{Source: "127.0.0.1:8080", Dest: "http://localhost:56789", Active: false},
 		},
 	}
 

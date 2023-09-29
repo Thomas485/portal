@@ -115,6 +115,14 @@ func (t *Tui) UpdateList(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			t.config.mu.Unlock()
 			return t, nil
+		case "D":
+			t.config.mu.Lock()
+			t.config.Routes[t.selection].Active = !t.config.Routes[t.selection].Active
+			if err := t.config.SaveToFile(t.config.File); err != nil {
+				fmt.Println(err)
+			}
+			t.config.mu.Unlock()
+			return t, nil
 		case "a":
 			t.screen = ScreenAdd
 			t.AddScreen.sourceInput.Reset()
@@ -146,7 +154,13 @@ func (t Tui) ViewList() string {
 	var routeLines []string
 	t.config.mu.RLock()
 	for _, route := range t.config.Routes {
-		rl := lipgloss.PlaceHorizontal(width, lipgloss.Left, route.Source)
+		var rl string
+		if route.Active {
+			rl += "A "
+		} else {
+			rl += "D "
+		}
+		rl += lipgloss.PlaceHorizontal(width, lipgloss.Left, route.Source)
 		rl += " -> "
 		rl += lipgloss.PlaceHorizontal(width, lipgloss.Left, route.Dest)
 		routeLines = append(routeLines, rl)
@@ -171,7 +185,7 @@ func (t Tui) ViewList() string {
 
 	r += strings.Repeat("\n", max(t.height-2-strings.Count(r, "\n"), 10))
 
-	r += styleHelp.Render("up   ‑ go up            d ‑ delete route") + "\n"
+	r += styleHelp.Render("up   ‑ go up            d ‑ delete route           D - (de)activate route") + "\n"
 	r += styleHelp.Render("down ‑ go down          a - add route")
 
 	return r
@@ -212,6 +226,7 @@ func (t *Tui) UpdateAdd(msg tea.Msg) (tea.Model, tea.Cmd) {
 				t.config.Routes = append(t.config.Routes, Route{
 					Source: t.AddScreen.sourceInput.Value(),
 					Dest:   t.AddScreen.destInput.Value(),
+					Active: false,
 				})
 				t.config.mu.Unlock()
 				err := t.config.SaveToFile(t.config.File)

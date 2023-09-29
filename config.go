@@ -15,6 +15,7 @@ import (
 type Route struct {
 	Source string `json:"source"`
 	Dest   string `json:"dest"`
+	Active bool
 }
 
 type Config struct {
@@ -55,6 +56,9 @@ func (c *Config) Serve(cert, key string) error {
 
 func findDestination(routes []Route, source string) (string, error) {
 	for _, route := range routes {
+		if !route.Active {
+			continue
+		}
 		if route.Source == source {
 			return route.Dest, nil
 		}
@@ -79,7 +83,7 @@ func loadConfig(filepath string) (*Config, error) {
 	return &config, nil
 }
 
-func (c Config) SaveToFile(filepath string) error {
+func (c *Config) SaveToFile(filepath string) error {
 	data, err := json.MarshalIndent(c, "", "    ")
 	if err != nil {
 		return err
