@@ -15,13 +15,13 @@ import (
 type Route struct {
 	Source string `json:"source"`
 	Dest   string `json:"dest"`
-	Active bool
+	Active bool   `json:"active"`
 }
 
 type Config struct {
-	File   string `json:"-"`
-	Port   int
-	Routes []Route
+	File   string  `json:"-"`
+	Port   int     `json:"port"`
+	Routes []Route `json:"routes"`
 	mu     sync.RWMutex
 }
 
