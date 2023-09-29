@@ -1,13 +1,15 @@
 {
-    "Port": 8082,
+    "Port": 8080,
     "Routes": [
         {
-            "source": "localhost:8082",
-            "dest": "http://localhost:12345"
+            "source": "localhost:8080",
+            "dest": "http://localhost:12345",
+            "Active": true
         },
         {
-            "source": "192.168.0.23:8082",
-            "dest": "http://localhost:56789"
+            "source": "127.0.0.1:8080",
+            "dest": "http://localhost:56789",
+            "Active": false
         }
     ]
 }
